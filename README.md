@@ -13,9 +13,9 @@ A mood-based music player built on YouTube. Pick a CD from the shelf, step into 
 Quota: 10,000 units/day free. Each search costs 100 units, so ~100 searches/day. Playback costs nothing. Genre mixes are cached for 24h.
 
 ## 2. Host on GitHub Pages
-1. Create a repo (e.g. `Paatu-Petti`) and upload `index.html` + this README.
+1. Create a repo (e.g. `pattu-petti`) and upload `index.html` + this README.
 2. Repo **Settings → Pages → Source: Deploy from branch → main / root**.
-3. Your site goes live at `https://<your-username>.github.io/Paatu-Petti/`.
+3. Your site goes live at `https://<your-username>.github.io/pattu-petti/`.
 4. Open it, click **⚙ YouTube API key**, and paste the key. Or paste it into `YT_API_KEY` at the top of the script.
 
 > Opening `index.html` by double-click (file://) can break YouTube embeds. Test on GitHub Pages or with `python -m http.server`.
