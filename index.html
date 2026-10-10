@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Paatu Petti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#1a120d;--ink:#f6ead8;--muted:#b9a88f;--panel:#241913;--line:#3a2a1f;--accent:#f0a24a}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at top,#2a1b12,var(--bg) 60%);color:var(--ink);font-family:'DM Sans',sans-serif;min-height:100vh}
+button{font:inherit;color:inherit;cursor:pointer}
+.hidden{display:none!important}
+
+/* ---------- HOME / CD SHELF ---------- */
+#home{padding:40px 16px 60px;text-align:center}
+#home h1{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(40px,7vw,76px);margin:0;letter-spacing:-1px}
+#home h1 span{color:var(--accent)}
+#home p.sub{color:var(--muted);margin:8px 0 40px}
+.shelf{max-width:1040px;margin:0 auto}
+.row{display:flex;gap:28px;justify-content:center;flex-wrap:wrap;padding:60px 12px 0}
+.plank{height:22px;background:linear-gradient(#9a6539,#5e3a1f);border-radius:4px;box-shadow:0 14px 24px rgba(0,0,0,.55),inset 0 2px 0 rgba(255,255,255,.12);margin-bottom:10px}
+.cd{width:210px;aspect-ratio:1;border:0;padding:0;background:none;position:relative;transition:transform .35s,opacity .4s}
+.cd .disc{position:absolute;inset:7%;border-radius:50%;background:radial-gradient(circle,#ddd 0 7%,#222 7.5% 9%,transparent 9.5%),conic-gradient(from 30deg,#e8e8f0,#b5d3f5,#f5c6e8,#f8f1b8,#c8f5d3,#e8e8f0);box-shadow:0 0 0 1px rgba(0,0,0,.2);transition:transform .5s cubic-bezier(.3,1.4,.5,1);z-index:0}
+.cd .case{position:absolute;inset:0;border-radius:6px;background:var(--cover);box-shadow:0 10px 22px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.15);overflow:hidden;z-index:1;display:flex;flex-direction:column;justify-content:flex-end;padding:18px 18px 18px 30px;text-align:left}
+.cd .case::before{content:"";position:absolute;left:0;top:0;bottom:0;width:14px;background:rgba(0,0,0,.35);box-shadow:inset -1px 0 0 rgba(255,255,255,.15)}
+.cd .case::after{content:"";position:absolute;inset:0;background:linear-gradient(120deg,rgba(255,255,255,.22),transparent 40%)}
+.cd .emo{font-size:46px;position:absolute;top:16px;right:18px}
+.cd .t{font-family:'Fraunces',serif;font-weight:800;font-size:22px;line-height:1.05}
+.cd .tg{font-size:12px;opacity:.8;margin-top:6px}
+.cd:hover{transform:translateY(-6px) rotate(-1deg)}
+.cd:hover .disc{transform:translateY(-34%)}
+.cd:focus-visible{outline:3px solid var(--accent);outline-offset:6px}
+.cd.eject .disc{transform:translateY(-140%) rotate(540deg)}
+.shelf.picking .cd:not(.eject){opacity:.25}
+.keylink{margin-top:36px;background:none;border:1px solid var(--line);border-radius:99px;padding:8px 16px;color:var(--muted)}
+
+/* ---------- SCENE VIEW ---------- */
+#view{padding:12px 16px 24px}
+.topbar{display:flex;align-items:center;gap:12px;max-width:1500px;margin:0 auto 12px}
+.topbar h2{font-family:'Fraunces',serif;margin:0;font-size:26px;flex:1}
+.topbar h2 small{display:block;font-family:'DM Sans';font-weight:400;font-size:13px;color:var(--muted)}
+.btn{background:#33241a;border:1px solid var(--line);border-radius:10px;padding:8px 14px}
+.btn:hover{border-color:var(--accent)}
+.layout{display:grid;grid-template-columns:1fr 360px;gap:16px;max-width:1500px;margin:0 auto}
+@media(max-width:960px){.layout{grid-template-columns:1fr}}
+.stage{position:relative;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#000;box-shadow:0 20px 50px rgba(0,0,0,.6)}
+#art,#fx{position:absolute;inset:0}
+#art svg{width:100%;height:100%;display:block}
+#fx{pointer-events:none;z-index:2}
+#ytwrap{position:absolute;z-index:3;background:#000;transition:all .45s ease}
+#ytwrap iframe{width:100%;height:100%;display:block;border:0}
+.stage.big #ytwrap{left:0!important;top:0!important;width:100%!important;height:100%!important}
+.stage-tools{position:absolute;right:10px;bottom:10px;z-index:4}
+.stage-tools .btn{background:rgba(20,14,10,.75);backdrop-filter:blur(6px);font-size:13px;padding:6px 10px}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 90px);min-height:420px}
+.np small{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:1px}
+.np .tt{font-weight:700;margin-top:4px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ctrls{display:flex;gap:8px}
+.ctrls button{flex:1;background:#33241a;border:1px solid var(--line);border-radius:10px;padding:10px 0;font-size:16px}
+.ctrls button:hover{border-color:var(--accent)}
+.ctrls .play{background:var(--accent);color:#1a120d;border-color:var(--accent)}
+form.search{display:flex;gap:6px}
+form.search input{flex:1;min-width:0;background:#1a120d;border:1px solid var(--line);border-radius:10px;padding:9px 12px;color:var(--ink);font:inherit}
+form.search input:focus{outline:none;border-color:var(--accent)}
+.list{overflow:auto;flex:1;display:flex;flex-direction:column;gap:4px;margin:0 -6px;padding:0 6px}
+.lh{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:1px}
+.lh button{background:none;border:0;color:var(--muted);font-size:12px;text-transform:none;letter-spacing:0}
+.lh button:hover{color:var(--accent)}
+.song{display:flex;gap:10px;align-items:center;padding:6px;border-radius:10px;background:none;border:0;text-align:left;width:100%}
+.song:hover{background:#2f2119}
+.song.on{background:color-mix(in srgb,var(--accent) 22%,transparent)}
+.song img{width:56px;height:42px;object-fit:cover;border-radius:6px;flex:none}
+.song .m{min-width:0;flex:1}
+.song .a{font-size:13.5px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.song .c{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.song .add{flex:none;background:#33241a;border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:12px}
+.msg{color:var(--muted);font-size:14px;padding:16px 4px;text-align:center}
+#results{max-height:220px;flex:none}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#33241a;border:1px solid var(--accent);padding:10px 16px;border-radius:10px;z-index:50;font-size:14px}
+
+dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:16px;max-width:460px;width:calc(100% - 32px);padding:22px}
+dialog::backdrop{background:rgba(0,0,0,.6)}
+dialog h3{font-family:'Fraunces',serif;margin:0 0 8px}
+dialog p{color:var(--muted);font-size:14px;line-height:1.5}
+dialog a{color:var(--accent)}
+dialog input{width:100%;background:#1a120d;border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--ink);font:inherit;margin:8px 0 14px}
+
+/* ---------- SCENE ANIMATIONS ---------- */
+.drop{position:absolute;top:-20%;width:1.5px;height:16%;background:linear-gradient(transparent,rgba(225,238,255,.75));animation:fall linear infinite}
+@keyframes fall{to{transform:translateY(750%)}}
+.rainbox{position:absolute;overflow:hidden}
+.twinkle{animation:tw 3s ease-in-out infinite}
+@keyframes tw{50%{opacity:.25}}
+.blink{animation:bl 1.6s ease-in-out infinite}
+@keyframes bl{50%{opacity:.2}}
+.bob{animation:bob .55s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:bottom center}
+@keyframes bob{to{transform:translateY(-12px)}}
+.steam{animation:steam 3s ease-in infinite;opacity:0}
+@keyframes steam{0%{opacity:0;transform:translateY(10px)}30%{opacity:.7}100%{opacity:0;transform:translateY(-40px)}}
+.flicker{animation:fl .18s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:bottom center}
+@keyframes fl{to{transform:scaleY(.86) scaleX(1.06)}}
+.spin{animation:spin 9s linear infinite;transform-box:view-box}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sway{animation:sway 4s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:top center}
+@keyframes sway{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
+.road{stroke-dasharray:30 40;animation:road .6s linear infinite}
+@keyframes road{to{stroke-dashoffset:70}}
+.fan{animation:spin .4s linear infinite;transform-box:fill-box;transform-origin:center}
+.screenglow{animation:sg 2.5s ease-in-out infinite alternate}
+@keyframes sg{to{opacity:.55}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<section id="home">
+  <h1>Paatu <span>Petti</span></h1>
+  <p class="sub">Pick a CD. Pick a mood. Press play.</p>
+  <div class="shelf" id="shelf"></div>
+  <button class="keylink" onclick="openKey()">⚙ YouTube API key</button>
+</section>
+
+<!-- SCENE -->
+<section id="view" class="hidden">
+  <div class="topbar">
+    <button class="btn" onclick="goHome()">⏏ Shelf</button>
+    <h2 id="gTitle">—<small id="gTag"></small></h2>
+  </div>
+  <div class="layout">
+    <div class="stage" id="stage">
+      <div id="art"></div>
+      <div id="fx"></div>
+      <div id="ytwrap"><div id="yt"></div></div>
+      <div class="stage-tools"><button class="btn" onclick="toggleBig()" id="bigBtn">⤢ Big screen</button></div>
+    </div>
+    <aside class="panel">
+      <div class="np"><small>Now playing</small><div class="tt" id="npTitle">—</div></div>
+      <div class="ctrls">
+        <button onclick="prev()" title="Previous">⏮</button>
+        <button onclick="togglePlay()" class="play" id="playBtn" title="Play/Pause">⏯</button>
+        <button onclick="next()" title="Next">⏭</button>
+        <button onclick="shuffleQ()" title="Shuffle">🔀</button>
+      </div>
+      <form class="search" onsubmit="doSearch(event)">
+        <input id="q" placeholder="Search any song to add…" autocomplete="off">
+        <button class="btn" type="submit">🔍</button>
+      </form>
+      <div class="list hidden" id="results"></div>
+      <div class="lh"><span>Up next</span><button onclick="loadGenre(cur,true)">↻ New mix</button></div>
+      <div class="list" id="queue"><div class="msg">Spinning up the CD…</div></div>
+    </aside>
+  </div>
+</section>
+
+<dialog id="keyDlg">
+  <h3>YouTube API key</h3>
+  <p>Paste your free YouTube Data API v3 key. It's stored only in this browser. Get one at <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener">Google Cloud Console</a>; steps are in the README.</p>
+  <input id="keyIn" placeholder="AIza…">
+  <div style="display:flex;gap:8px;justify-content:flex-end">
+    <button class="btn" onclick="keyDlg.close()">Cancel</button>
+    <button class="btn" style="background:var(--accent);color:#1a120d" onclick="saveKey()">Save</button>
+  </div>
+</dialog>
+
+<script>
+/* =========================================================
+   CONFIG — paste your key here (restrict it to your GitHub
+   Pages URL in Google Cloud!) or leave blank and enter it in-app.
+   ========================================================= */
+const YT_API_KEY = "";
+
+/* ---------------- SVG SCENES (viewBox 1600x900) ---------------- */
+const TV = (fill='#161616') => `
+  <rect x="560" y="490" width="480" height="110" rx="6" fill="#5b3418"/>
+  <rect x="560" y="490" width="480" height="12" fill="#7a4a24"/>
+  <rect x="590" y="520" width="190" height="64" rx="4" fill="#4a2a13"/><rect x="820" y="520" width="190" height="64" rx="4" fill="#4a2a13"/>
+  <rect x="600" y="240" width="400" height="240" rx="14" fill="${fill}"/>
+  <rect x="770" y="478" width="60" height="14" fill="#111"/>`;
+
+const SVG_RAIN = `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+<defs><linearGradient id="rw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a86a40"/><stop offset="1" stop-color="#7d4a2b"/></linearGradient>
+<radialGradient id="rg" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#bfe0ff" stop-opacity=".45"/><stop offset="1" stop-color="#bfe0ff" stop-opacity="0"/></radialGradient>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#55697a"/><stop offset="1" stop-color="#7d8f8a"/></linearGradient></defs>
+<rect width="1600" height="900" fill="url(#rw)"/>
+<rect y="640" width="1600" height="260" fill="#7a2a1f"/><rect y="640" width="1600" height="8" fill="#5a1d15"/>
+<g fill="none" stroke="#5a1d15" stroke-width="2" opacity=".5"><path d="M0 720H1600M0 810H1600M200 640L120 900M520 640L480 900M800 640V900M1080 640L1120 900M1400 640L1480 900"/></g>
+${[90,1170].map(x=>`<rect x="${x}" y="140" width="340" height="380" fill="url(#sky)"/>
+<path d="M${x+60} 520 Q${x+80} 330 ${x+120} 250" stroke="#2f3a33" stroke-width="10" fill="none"/>
+<g fill="#2f3a33">${[0,1,2,3,4].map(i=>`<path d="M${x+120} 250 q${-70+i*35} ${-30+Math.abs(i-2)*15} ${-110+i*55} ${30+Math.abs(i-2)*10}" stroke="#2f3a33" stroke-width="8" fill="none"/>`).join('')}</g>
+<rect x="${x}" y="140" width="340" height="380" fill="none" stroke="#3e2210" stroke-width="18"/>
+<path d="M${x+170} 140V520M${x} 330H${x+340}" stroke="#3e2210" stroke-width="10"/>
+<g stroke="#2b1709" stroke-width="5">${[1,2,3,4,5,6].map(i=>`<line x1="${x+i*48}" y1="140" x2="${x+i*48}" y2="520"/>`).join('')}</g>`).join('')}
+<g transform="translate(800 40)"><rect x="-6" y="-40" width="12" height="40" fill="#3b2a1e"/><circle r="22" fill="#3b2a1e"/>
+<g class="fan"><ellipse rx="150" ry="14" fill="#4a3829" opacity=".85"/><ellipse rx="14" ry="150" fill="#4a3829" opacity=".0"/></g></g>
+<g transform="translate(1110 250)"><rect width="70" height="90" fill="#efe4cf"/><rect y="0" width="70" height="22" fill="#b33"/><g fill="#999"><rect x="8" y="34" width="54" height="4"/><rect x="8" y="46" width="54" height="4"/><rect x="8" y="58" width="40" height="4"/></g></g>
+<g transform="translate(395 200)"><rect width="110" height="130" fill="#3e2210"/><rect x="10" y="10" width="90" height="110" fill="#c9b79a"/><circle cx="55" cy="55" r="22" fill="#8a7458"/><rect x="30" y="80" width="50" height="40" rx="20" fill="#8a7458"/>
+<path d="M-6 0 Q55 60 116 0" stroke="#f2f2e8" stroke-width="7" stroke-dasharray="2 9" fill="none" stroke-linecap="round"/></g>
+${TV()}
+<ellipse cx="800" cy="360" rx="420" ry="260" fill="url(#rg)" class="screenglow"/>
+<rect x="420" y="770" width="760" height="110" rx="6" fill="#c7a970" opacity=".85"/>
+<g stroke="#a88a52" stroke-width="3" opacity=".7">${Array.from({length:18},(_,i)=>`<line x1="${430+i*42}" y1="772" x2="${430+i*42}" y2="878"/>`).join('')}</g>
+<g fill="#24130b">
+ <circle cx="560" cy="690" r="30"/><path d="M490 880 Q492 740 560 728 Q628 740 632 880Z"/>
+ <circle cx="700" cy="700" r="27"/><circle cx="700" cy="728" r="15"/><path d="M630 880 Q636 755 700 742 Q768 755 776 880Z"/><path d="M752 760 L790 880 L740 880Z" fill="#5c1a2a"/>
+ <circle cx="860" cy="770" r="20"/><path d="M826 880 Q830 800 860 792 Q892 800 896 880Z"/>
+ <circle cx="1020" cy="676" r="20"/><path d="M996 880 V720 Q1020 702 1044 720 V880Z" class="bob"/><path d="M1040 720 L1080 650" stroke="#24130b" stroke-width="12" stroke-linecap="round" class="bob"/>
+ <ellipse cx="1120" cy="852" rx="62" ry="18"/><circle cx="1060" cy="830" r="18"/>
+</g>
+</svg>`;
+
+const SVG_NIGHT = `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+<defs><linearGradient id="ns" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#070a24"/><stop offset=".7" stop-color="#2b1846"/><stop offset="1" stop-color="#5a2a4a"/></linearGradient>
+<radialGradient id="lamp" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffb35a" stop-opacity=".35"/><stop offset="1" stop-color="#ffb35a" stop-opacity="0"/></radialGradient>
+<radialGradient id="mon" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#7fb2ff" stop-opacity=".35"/><stop offset="1" stop-color="#7fb2ff" stop-opacity="0"/></radialGradient></defs>
+<rect width="1600" height="900" fill="#0a0b16"/>
+<rect x="700" y="0" width="900" height="900" fill="url(#ns)"/>
+<circle cx="1420" cy="130" r="42" fill="#f3ecd2"/><circle cx="1436" cy="120" r="40" fill="url(#ns)" opacity=".0"/>
+<g id="stars"></g><g id="city"></g>
+<rect x="700" y="610" width="900" height="290" fill="#0c0d1c" opacity=".92"/>
+<g stroke="#1d1f38" stroke-width="10"><line x1="700" y1="600" x2="1600" y2="600"/>${Array.from({length:10},(_,i)=>`<line x1="${730+i*95}" y1="600" x2="${730+i*95}" y2="760"/>`).join('')}<line x1="700" y1="760" x2="1600" y2="760"/></g>
+<rect x="690" y="0" width="24" height="900" fill="#05060d"/>
+<g fill="#04040a"><circle cx="1180" cy="430" r="30"/><path d="M1136 470 Q1180 450 1224 470 L1240 620 L1222 900 H1140 L1120 620Z"/><path d="M1140 480 L1090 600 L1110 606 L1150 520Z"/><path d="M1220 480 L1270 600 L1250 606 L1210 520Z"/></g>
+<ellipse cx="350" cy="420" rx="420" ry="300" fill="url(#mon)" class="screenglow"/>
+<ellipse cx="640" cy="440" rx="200" ry="180" fill="url(#lamp)"/>
+<rect x="80" y="540" width="600" height="22" fill="#1d1a24"/><rect x="110" y="562" width="16" height="338" fill="#15131b"/><rect x="634" y="562" width="16" height="338" fill="#15131b"/>
+<rect x="170" y="310" width="360" height="220" rx="10" fill="#0d0d10"/><rect x="335" y="530" width="30" height="12" fill="#0d0d10"/><rect x="290" y="534" width="120" height="8" rx="3" fill="#0d0d10"/>
+<rect x="230" y="548" width="220" height="14" rx="4" fill="#202028"/>
+<path d="M600 540 L640 420 L620 410" stroke="#2b2830" stroke-width="7" fill="none"/><path d="M600 420 L660 410 L650 440 Z" fill="#3a3238"/>
+<rect x="520" y="512" width="34" height="30" rx="4" fill="#3b2f2a"/><path d="M554 518 q14 0 14 10 q0 10 -14 10" stroke="#3b2f2a" stroke-width="5" fill="none"/>
+<path d="M528 505 q6 -14 0 -26 M540 505 q6 -14 0 -26" stroke="#9aa" stroke-width="2" fill="none" class="steam"/>
+</svg>`;
+
+const SVG_KAAPI = `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+<defs><linearGradient id="kw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6e7c6"/><stop offset="1" stop-color="#e9cf9f"/></linearGradient>
+<linearGradient id="beam" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3b0" stop-opacity=".55"/><stop offset="1" stop-color="#fff3b0" stop-opacity="0"/></linearGradient>
+<linearGradient id="brass" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9a6a1f"/><stop offset=".5" stop-color="#f1c35a"/><stop offset="1" stop-color="#9a6a1f"/></linearGradient>
+<linearGradient id="msky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd59a"/><stop offset="1" stop-color="#bfe3c6"/></linearGradient></defs>
+<rect width="1600" height="900" fill="url(#kw)"/>
+<rect x="0" y="560" width="1600" height="30" fill="#7a3b1f"/>
+<rect y="590" width="1600" height="310" fill="#b8432f"/>
+<rect x="110" y="150" width="320" height="330" fill="url(#msky)"/><circle cx="330" cy="260" r="46" fill="#ffe08a"/>
+<path d="M110 430 Q200 370 280 420 T430 400 V480 H110Z" fill="#7fae6e"/>
+<rect x="110" y="150" width="320" height="330" fill="none" stroke="#5e3416" stroke-width="16"/><path d="M270 150V480" stroke="#5e3416" stroke-width="8"/>
+<polygon points="110,150 430,150 1000,900 360,900" fill="url(#beam)"/>
+<path d="M0 60 Q800 140 1600 60" stroke="#6b4a1e" stroke-width="3" fill="none"/><g id="thor"></g>
+<g transform="translate(1200 200)"><rect width="150" height="110" fill="#5e3416"/><rect x="10" y="10" width="130" height="90" fill="#f2d9a6"/><path d="M75 25 l20 40 h-40z" fill="#c0392b"/><circle cx="75" cy="78" r="10" fill="#e67e22"/></g>
+${TV('#1b1b1b')}
+<g transform="translate(470 420)"><rect x="-8" y="0" width="16" height="140" fill="url(#brass)"/><ellipse cx="0" cy="0" rx="46" ry="10" fill="url(#brass)"/><ellipse cx="0" cy="140" rx="40" ry="12" fill="url(#brass)"/>
+<path d="M-30 -2 q-6 -26 0 -34 q6 8 0 34z" fill="#ffb627" class="flicker"/><path d="M30 -2 q-6 -26 0 -34 q6 8 0 34z" fill="#ffb627" class="flicker"/><path d="M0 -12 q-6 -26 0 -34 q6 8 0 34z" fill="#ffd36b" class="flicker"/></g>
+<g transform="translate(1110 470)"><rect x="-70" y="40" width="140" height="16" rx="4" fill="#6a3a1a"/><rect x="-60" y="56" width="10" height="64" fill="#5a3014"/><rect x="50" y="56" width="10" height="64" fill="#5a3014"/>
+<path d="M-50 40 Q-50 18 -36 16 H36 Q50 18 50 40Z" fill="url(#brass)"/><path d="M-20 18 L-26 -40 H26 L20 18Z" fill="url(#brass)"/><ellipse cx="0" cy="-40" rx="26" ry="6" fill="#6b3d17"/>
+<g stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"><path d="M-8 -50 q-10 -18 0 -36 q10 -18 0 -36" class="steam"/><path d="M8 -50 q10 -18 0 -36 q-10 -18 0 -36" class="steam" style="animation-delay:1.4s"/></g></g>
+<g id="kolam" transform="translate(800 770) scale(1 .38)"></g>
+</svg>`;
+
+const SVG_PARTY = `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+<defs><linearGradient id="ps" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#12052a"/><stop offset="1" stop-color="#3d0f4a"/></linearGradient>
+<radialGradient id="pg" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ff5fd1" stop-opacity=".35"/><stop offset="1" stop-color="#ff5fd1" stop-opacity="0"/></radialGradient></defs>
+<rect width="1600" height="900" fill="url(#ps)"/><g id="stars"></g>
+<g fill="#1a0c2a">${[[0,520,180],[160,470,140],[1300,500,160],[1450,450,150]].map(([x,y,w])=>`<rect x="${x}" y="${y}" width="${w}" height="${900-y}"/>`).join('')}</g>
+<g id="lights"></g>
+<ellipse cx="800" cy="330" rx="560" ry="320" fill="url(#pg)" class="screenglow"/>
+<rect x="480" y="140" width="640" height="370" rx="8" fill="#0b0b0f"/><rect x="785" y="510" width="30" height="120" fill="#0b0b0f"/>
+<g fill="#151019" stroke="#2c2235" stroke-width="3">${[300,1200].map(x=>`<rect x="${x}" y="380" width="110" height="250" rx="8"/><circle cx="${x+55}" cy="450" r="34"/><circle cx="${x+55}" cy="560" r="44"/>`).join('')}</g>
+<rect y="620" width="1600" height="280" fill="#2a1830"/><rect y="610" width="1600" height="24" fill="#4a2f52"/>
+<g fill="#0a0410">${[160,300,430,560,700,840,980,1110,1250,1390].map((x,i)=>{const h=180+((i*53)%60);return `<g class="bob" style="animation-delay:${(i%4)*.13}s"><circle cx="${x}" cy="${900-h}" r="26"/><path d="M${x-40} 900 Q${x-38} ${930-h} ${x} ${928-h} Q${x+38} ${930-h} ${x+40} 900Z"/>${i%2?`<path d="M${x+22} ${952-h} L${x+60} ${860-h}" stroke="#0a0410" stroke-width="14" stroke-linecap="round"/>`:`<path d="M${x-22} ${952-h} L${x-58} ${862-h}" stroke="#0a0410" stroke-width="14" stroke-linecap="round"/>`}</g>`}).join('')}</g>
+</svg>`;
+
+const SVG_DANCE = `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+<defs><radialGradient id="dg" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#4af0ff" stop-opacity=".3"/><stop offset="1" stop-color="#4af0ff" stop-opacity="0"/></radialGradient>
+<radialGradient id="ball" cx=".35" cy=".35" r=".7"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="#9aa"/><stop offset="1" stop-color="#334"/></radialGradient></defs>
+<rect width="1600" height="900" fill="#07020f"/>
+<g id="beams" class="spin" style="transform-origin:800px 80px"></g>
+<ellipse cx="800" cy="270" rx="560" ry="300" fill="url(#dg)" class="screenglow"/>
+<rect x="500" y="100" width="600" height="340" rx="6" fill="#0d0d14" stroke="#2a2a44" stroke-width="4"/>
+<line x1="800" y1="0" x2="800" y2="50" stroke="#555" stroke-width="3"/><circle cx="800" cy="80" r="32" fill="url(#ball)"/>
+<g stroke="#223" stroke-width="1.5" opacity=".7"><path d="M768 80H832M772 64H828M772 96H828M800 48V112M784 50Q776 80 784 110M816 50Q824 80 816 110"/></g>
+<g id="floor"></g>
+<g fill="#000">${[220,400,560,1040,1200,1380].map((x,i)=>`<g class="bob" style="animation-delay:${i*.09}s"><circle cx="${x}" cy="${640+(i%2)*20}" r="24"/><path d="M${x-30} 900 L${x-20} ${690+(i%2)*20} Q${x} ${676+(i%2)*20} ${x+20} ${690+(i%2)*20} L${x+30} 900Z"/><path d="M${x-18} ${700+(i%2)*20} L${x-60} ${600+(i%2)*20}M${x+18} ${700+(i%2)*20} L${x+56} ${610+(i%2)*20}" stroke="#000" stroke-width="12" stroke-linecap="round"/></g>`).join('')}</g>
+</svg>`;
+
+const SVG_MAIN = `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+<defs><linearGradient id="gs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b2a6b"/><stop offset=".45" stop-color="#ff7a59"/><stop offset=".62" stop-color="#ffc46b"/></linearGradient></defs>
+<rect width="1600" height="900" fill="url(#gs)"/>
+<circle cx="820" cy="430" r="80" fill="#ffe2a0"/>
+<path d="M0 450 Q200 360 420 430 T820 420 T1200 400 T1600 440 V900 H0Z" fill="#6d3b52"/>
+<path d="M0 470 Q300 420 560 470 T1100 455 T1600 480 V900 H0Z" fill="#4b2a40"/>
+<polygon points="770,450 830,450 1300,900 300,900" fill="#2c2230"/>
+<line x1="800" y1="455" x2="800" y2="900" stroke="#ffe7b0" stroke-width="10" class="road"/>
+<g fill="#2b1c2c">${[[200,520],[330,480],[1300,500],[1420,540]].map(([x,y])=>`<path d="M${x} 900 V${y}" stroke="#2b1c2c" stroke-width="10"/><path d="M${x} ${y} q-60 10 -90 50 M${x} ${y} q60 10 90 50 M${x} ${y} q-30 -30 -80 -20 M${x} ${y} q30 -30 80 -20" stroke="#2b1c2c" stroke-width="10" fill="none"/>`).join('')}</g>
+<path d="M0 0 H1600 V110 Q800 60 0 110Z" fill="#141018"/>
+<path d="M0 0 L180 0 L60 620 L0 640Z" fill="#141018"/><path d="M1600 0 L1420 0 L1540 620 L1600 640Z" fill="#141018"/>
+<rect x="720" y="80" width="160" height="44" rx="12" fill="#1d1820"/><rect x="730" y="88" width="140" height="28" rx="8" fill="#ff9d7a" opacity=".5"/>
+<g class="sway"><line x1="800" y1="124" x2="800" y2="200" stroke="#ddd" stroke-width="2"/><circle cx="800" cy="204" r="9" fill="#fff"/><circle cx="792" cy="214" r="7" fill="#fff"/><circle cx="808" cy="214" r="7" fill="#fff"/></g>
+<path d="M0 560 Q800 500 1600 560 V900 H0Z" fill="#17131b"/>
+<path d="M0 560 Q800 500 1600 560" stroke="#2c2632" stroke-width="6" fill="none"/>
+<rect x="600" y="580" width="400" height="225" rx="14" fill="#08080b"/>
+<g transform="translate(290 760)"><circle r="190" fill="none" stroke="#0c0a0e" stroke-width="40"/><circle r="40" fill="#0c0a0e"/><path d="M-170 20 H170" stroke="#0c0a0e" stroke-width="34"/></g>
+<g fill="#2c2632">${[1110,1170,1230].map(x=>`<circle cx="${x}" cy="680" r="18"/>`).join('')}</g>
+</svg>`;
+
+/* ---------------- FX (scene animations) ---------------- */
+function rainIn(fx, [l,t,w,h], n, op=1){
+  const b=document.createElement('div'); b.className='rainbox';
+  Object.assign(b.style,{left:l+'%',top:t+'%',width:w+'%',height:h+'%',opacity:op});
+  for(let i=0;i<n;i++){const d=document.createElement('div');d.className='drop';
+    d.style.left=Math.random()*100+'%';d.style.animationDuration=(.5+Math.random()*.5)+'s';d.style.animationDelay=(-Math.random()*2)+'s';b.appendChild(d)}
+  fx.appendChild(b);
+}
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);parent&&parent.appendChild(e);return e}
+function stars(svg,n,maxY){const g=svg.querySelector('#stars');if(!g)return;for(let i=0;i<n;i++){const s=el('circle',{cx:Math.random()*1600,cy:Math.random()*maxY,r:Math.random()*1.8+.4,fill:'#fff'},g);if(Math.random()<.4){s.classList.add('twinkle');s.style.animationDelay=(-Math.random()*3)+'s'}}}
+
+function fxRain(svg,fx){ rainIn(fx,[5.6,15.5,21.3,42.3],45); rainIn(fx,[73.1,15.5,21.3,42.3],45); rainIn(fx,[0,0,100,100],40,.18); }
+function fxNight(svg){
+  stars(svg,70,300);
+  const g=svg.querySelector('#city'); let x=700;
+  while(x<1600){const w=50+Math.random()*90,h=180+Math.random()*380,y=620-h;
+    el('rect',{x,y,width:w,height:h,fill:Math.random()<.5?'#10132e':'#151838'},g);
+    for(let wy=y+14;wy<610;wy+=22)for(let wx=x+8;wx<x+w-10;wx+=16){ if(Math.random()<.32){const r=el('rect',{x:wx,y:wy,width:8,height:11,fill:Math.random()<.8?'#ffd27a':'#9fd0ff',opacity:.85},g);if(Math.random()<.15){r.classList.add('twinkle');r.style.animationDelay=(-Math.random()*3)+'s'}}}
+    x+=w+4+Math.random()*10}
+}
+function fxKaapi(svg){
+  const k=svg.querySelector('#kolam'), W='#fffaf0';
+  for(let ring=1;ring<=3;ring++){const n=ring*8;for(let i=0;i<n;i++){const a=i/n*Math.PI*2;el('circle',{cx:Math.cos(a)*ring*55,cy:Math.sin(a)*ring*55,r:5,fill:W},k)}}
+  for(let i=0;i<8;i++){const a=i*45;el('path',{d:'M0 0 Q40 -60 0 -150 Q-40 -60 0 0',fill:'none',stroke:W,'stroke-width':6,transform:`rotate(${a})`},k);
+    el('path',{d:'M0 -150 Q60 -200 0 -230 Q-60 -200 0 -150',fill:'none',stroke:W,'stroke-width':5,transform:`rotate(${a+22.5})`},k)}
+  el('circle',{r:210,fill:'none',stroke:W,'stroke-width':6},k);el('circle',{r:230,fill:'none',stroke:'#f4c542','stroke-width':6,'stroke-dasharray':'14 10'},k);
+  const t=svg.querySelector('#thor');
+  for(let i=0;i<=26;i++){const x=i*1600/26, y=60+80*(1-Math.pow((x-800)/800,2));
+    el('path',{d:`M${x-12} ${y} Q${x} ${y+70} ${x+12} ${y} Z`,fill:i%2?'#3f7d2c':'#5a9a3a',class:'sway',style:`animation-delay:${-i*.3}s`},t)}
+}
+function fxParty(svg){
+  stars(svg,50,380);
+  const g=svg.querySelector('#lights'), cols=['#ffd166','#ff6b9a','#7cf3ff','#b5ff7a','#ffa45b'];
+  [[0,40,1600,60,220],[0,140,1600,120,180],[200,0,1400,30,140]].forEach(([x1,y1,x2,y2,sag])=>{
+    const cx=(x1+x2)/2, cy=Math.max(y1,y2)+sag;
+    el('path',{d:`M${x1} ${y1} Q${cx} ${cy} ${x2} ${y2}`,stroke:'#3a2a4a','stroke-width':2,fill:'none'},g);
+    for(let i=1;i<30;i++){const t=i/30,x=(1-t)**2*x1+2*(1-t)*t*cx+t*t*x2,y=(1-t)**2*y1+2*(1-t)*t*cy+t*t*y2;
+      const c=el('circle',{cx:x,cy:y+6,r:6,fill:cols[i%5]},g);c.classList.add('blink');c.style.animationDelay=(-Math.random()*1.6)+'s';c.style.filter=`drop-shadow(0 0 6px ${cols[i%5]})`}
+  });
+}
+function fxDance(svg){
+  const b=svg.querySelector('#beams'), cols=['#ff3df2','#3dfbff','#fff23d','#7d3dff','#3dff8a'];
+  for(let i=0;i<10;i++){const a=i*36;el('polygon',{points:'800,80 760,1100 840,1100',fill:cols[i%5],opacity:.13,transform:`rotate(${a} 800 80)`},b)}
+  const f=svg.querySelector('#floor');
+  for(let r=0;r<5;r++){const y0=600+r*60,y1=y0+60,s0=.55+r*.12,s1=s0+.12;
+    for(let c=-5;c<5;c++){const x0a=800+c*160*s0,x0b=800+(c+1)*160*s0,x1a=800+c*160*s1,x1b=800+(c+1)*160*s1;
+      const p=el('polygon',{points:`${x0a},${y0} ${x0b},${y0} ${x1b},${y1} ${x1a},${y1}`,fill:cols[(r+c+10)%5],opacity:.55,stroke:'#07020f','stroke-width':4},f);
+      p.classList.add('blink');p.style.animationDelay=(-Math.random()*1.6)+'s'}}
+}
+
+/* ---------------- GENRES ----------------
+   screen = [left%, top%, width%, height%] of the TV/monitor inside the scene.
+   query  = what gets searched on YouTube for this CD (edit freely!). */
+const GENRES=[
+ {id:'rain',name:'Rain Aesthetics',tag:'Mazhai, jannal, nostalgia',emoji:'🌧️',cover:'linear-gradient(160deg,#5b7f8f,#1d3442)',accent:'#9cc7e0',
+  query:'tamil rain melody songs ilaiyaraaja arr rahman',screen:[39.06,29.11,21.88,21.78],svg:SVG_RAIN,fx:fxRain},
+ {id:'night',name:'Into the Night',tag:'City lights, low lamps',emoji:'🌃',cover:'linear-gradient(160deg,#3a2a6b,#0b0d24)',accent:'#a99bff',
+  query:'late night chill songs hindi tamil english lofi',screen:[11.56,36.11,20.63,21.11],svg:SVG_NIGHT,fx:fxNight},
+ {id:'kaapi',name:'Morning Kaapi Ragas',tag:'Filter coffee & kolam',emoji:'☕',cover:'linear-gradient(160deg,#e9b75a,#8a4a1c)',accent:'#f4c542',
+  query:'morning carnatic raga tamil film songs',screen:[39.06,29.11,21.88,21.78],svg:SVG_KAAPI,fx:fxKaapi},
+ {id:'party',name:'Party Bangers',tag:'Terrace, fairy lights, volume up',emoji:'🎉',cover:'linear-gradient(160deg,#ff5fa2,#4a0f5a)',accent:'#ff6bb5',
+  query:'party songs hits tamil hindi english',screen:[31.25,17.78,37.5,36.67],svg:SVG_PARTY,fx:fxParty},
+ {id:'dance',name:'Danceaholics',tag:'Mirror ball mandatory',emoji:'🪩',cover:'linear-gradient(160deg,#3dfbff,#7d3dff)',accent:'#3dfbff',
+  query:'dance hits kuthu songs dj',screen:[32.19,12.78,35.63,34.44],svg:SVG_DANCE,fx:fxDance},
+ {id:'main',name:'Main Character Energy',tag:'Golden hour, windows down',emoji:'🌅',cover:'linear-gradient(160deg,#ffb36b,#c2416b)',accent:'#ffb36b',
+  query:'main character energy songs feel good',screen:[38.44,66.11,23.13,21.67],svg:SVG_MAIN,fx:null},
+];
+
+/* ---------------- STATE ---------------- */
+let cur=null, queue=[], idx=0, player=null, ready=false, pending=null;
+const $=s=>document.querySelector(s);
+const keyDlg=$('#keyDlg');
+const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch{return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+const getKey=()=>YT_API_KEY||store.get('pp_key')||'';
+const dec=s=>{const t=document.createElement('textarea');t.innerHTML=s;return t.value};
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2600)}
+
+/* ---------------- SHELF ---------------- */
+(function buildShelf(){
+  const shelf=$('#shelf');
+  [GENRES.slice(0,3),GENRES.slice(3)].forEach(row=>{
+    const r=document.createElement('div');r.className='row';
+    row.forEach(g=>{const b=document.createElement('button');b.className='cd';b.style.setProperty('--cover',g.cover);
+      b.innerHTML=`<div class="disc"></div><div class="case"><span class="emo">${g.emoji}</span><div class="t">${g.name}</div><div class="tg">${g.tag}</div></div>`;
+      b.onclick=()=>{b.classList.add('eject');shelf.classList.add('picking');setTimeout(()=>{b.classList.remove('eject');shelf.classList.remove('picking');openGenre(g)},650)};
+      r.appendChild(b)});
+    shelf.appendChild(r);const p=document.createElement('div');p.className='plank';shelf.appendChild(p)});
+})();
+
+/* ---------------- VIEW ---------------- */
+function openGenre(g){
+  cur=g;document.documentElement.style.setProperty('--accent',g.accent);
+  $('#gTitle').firstChild.textContent=g.emoji+' '+g.name;$('#gTag').textContent=g.tag;
+  $('#art').innerHTML=g.svg;$('#fx').innerHTML='';g.fx&&g.fx($('#art svg'),$('#fx'));
+  const [l,t,w,h]=g.screen;Object.assign($('#ytwrap').style,{left:l+'%',top:t+'%',width:w+'%',height:h+'%'});
+  $('#stage').classList.remove('big');$('#bigBtn').textContent='⤢ Big screen';
+  $('#home').classList.add('hidden');$('#view').classList.remove('hidden');window.scrollTo(0,0);
+  loadGenre(g);
+}
+function goHome(){ready&&player.pauseVideo();$('#view').classList.add('hidden');$('#home').classList.remove('hidden');document.documentElement.style.setProperty('--accent','#f0a24a')}
+function toggleBig(){const s=$('#stage');s.classList.toggle('big');$('#bigBtn').textContent=s.classList.contains('big')?'⤡ Back to scene':'⤢ Big screen'}
+
+/* ---------------- YOUTUBE ---------------- */
+async function ytSearch(q,max){
+  const key=getKey(); if(!key) throw new Error('NOKEY');
+  const u=new URL('https://www.googleapis.com/youtube/v3/search');
+  Object.entries({part:'snippet',type:'video',videoEmbeddable:'true',videoSyndicated:'true',videoCategoryId:'10',regionCode:'IN',maxResults:max,q,key}).forEach(([k,v])=>u.searchParams.set(k,v));
+  const j=await (await fetch(u)).json();
+  if(j.error){const r=j.error.errors?.[0]?.reason||'';throw new Error(r.includes('quota')?'Daily YouTube quota used up. It resets around 12:30 PM IST.':j.error.message)}
+  return j.items.map(it=>({id:it.id.videoId,title:dec(it.snippet.title),ch:dec(it.snippet.channelTitle),thumb:it.snippet.thumbnails?.medium?.url||it.snippet.thumbnails?.default?.url}));
+}
+const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+
+async function loadGenre(g,force){
+  const qEl=$('#queue');qEl.innerHTML='<div class="msg">Spinning up the CD…</div>';
+  const ck='pp_cache_'+g.id, c=store.get(ck);
+  let items;
+  if(!force&&c&&Date.now()-c.t<864e5&&c.q===g.query) items=c.items.slice();
+  else try{items=await ytSearch(g.query,40);store.set(ck,{t:Date.now(),q:g.query,items})}
+  catch(e){ if(e.message==='NOKEY'){qEl.innerHTML='<div class="msg">Add your YouTube API key to start playing.</div>';openKey();}else qEl.innerHTML=`<div class="msg">⚠ ${esc(e.message)}</div>`;return }
+  if(cur!==g)return;
+  queue=shuf(items);idx=0;renderQueue();playIdx(0);
+}
+function renderQueue(){
+  const q=$('#queue');if(!queue.length){q.innerHTML='<div class="msg">Queue is empty.</div>';return}
+  q.innerHTML=queue.map((s,i)=>`<button class="song${i===idx?' on':''}" onclick="playIdx(${i})"><img src="${s.thumb}" alt="" loading="lazy"><div class="m"><div class="a">${esc(s.title)}</div><div class="c">${esc(s.ch)}</div></div></button>`).join('');
+  q.querySelector('.on')?.scrollIntoView({block:'nearest'});
+}
+function playIdx(i){
+  if(!queue[i])return;idx=i;const s=queue[i];$('#npTitle').textContent=s.title;renderQueue();
+  if(ready)player.loadVideoById(s.id);else pending=s.id;
+}
+const next=()=>queue.length&&playIdx((idx+1)%queue.length);
+const prev=()=>queue.length&&playIdx((idx-1+queue.length)%queue.length);
+function togglePlay(){if(!ready)return;player.getPlayerState()===1?player.pauseVideo():player.playVideo()}
+function shuffleQ(){if(!queue.length)return;const c=queue[idx];queue=[c,...shuf(queue.filter((_,i)=>i!==idx))];idx=0;renderQueue();toast('Shuffled 🔀')}
+
+async function doSearch(e){
+  e.preventDefault();const q=$('#q').value.trim();if(!q)return;const r=$('#results');
+  r.classList.remove('hidden');r.innerHTML='<div class="msg">Searching…</div>';
+  try{const items=await ytSearch(q,8);r._items=items;
+    r.innerHTML=`<div class="lh"><span>Results</span><button onclick="$('#results').classList.add('hidden')">✕ close</button></div>`+items.map((s,i)=>`<div class="song"><img src="${s.thumb}" alt=""><div class="m"><div class="a">${esc(s.title)}</div><div class="c">${esc(s.ch)}</div></div><button class="add" onclick="addRes(${i},1)">▶</button><button class="add" onclick="addRes(${i},0)">＋</button></div>`).join('')}
+  catch(err){r.innerHTML=`<div class="msg">⚠ ${err.message==='NOKEY'?'Add your API key first.':esc(err.message)}</div>`;if(err.message==='NOKEY')openKey()}
+}
+function addRes(i,playNow){const s=$('#results')._items[i];queue.splice(idx+1,0,s);if(playNow)playIdx(idx+1);else{renderQueue();toast('Added to up next')}}
+
+function openKey(){$('#keyIn').value=store.get('pp_key')||'';keyDlg.showModal()}
+function saveKey(){const k=$('#keyIn').value.trim();store.set('pp_key',k);keyDlg.close();toast(k?'Key saved ✓':'Key cleared');if(k&&cur&&!$('#view').classList.contains('hidden'))loadGenre(cur)}
+
+window.onYouTubeIframeAPIReady=()=>{
+  player=new YT.Player('yt',{width:'100%',height:'100%',playerVars:{playsinline:1,rel:0,modestbranding:1},
+    events:{onReady:()=>{ready=true;if(pending){player.loadVideoById(pending);pending=null}},
+      onStateChange:e=>{if(e.data===YT.PlayerState.ENDED)next()},
+      onError:()=>{toast("This one can't play here, skipping ⏭");setTimeout(next,900)}}});
+};
+document.addEventListener('keydown',e=>{if($('#view').classList.contains('hidden')||e.target.tagName==='INPUT')return;
+  if(e.code==='Space'){e.preventDefault();togglePlay()}if(e.key==='ArrowRight')next();if(e.key==='ArrowLeft')prev()});
+</script>
+<script src="https://www.youtube.com/iframe_api"></script>
+</body>
+</html>
