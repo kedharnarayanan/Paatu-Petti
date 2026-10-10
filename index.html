@@ -43,20 +43,32 @@ button{font:inherit;color:inherit;cursor:pointer}
 .topbar h2 small{display:block;font-family:'DM Sans';font-weight:400;font-size:13px;color:var(--muted)}
 .btn{background:#33241a;border:1px solid var(--line);border-radius:10px;padding:8px 14px}
 .btn:hover{border-color:var(--accent)}
-.layout{display:grid;grid-template-columns:1fr 360px;gap:16px;max-width:1500px;margin:0 auto}
+.layout{display:grid;grid-template-columns:1fr 360px;gap:16px;max-width:1500px;margin:0 auto;align-items:start;transition:grid-template-columns .3s}
+.layout.mini{grid-template-columns:1fr 280px}
 @media(max-width:960px){.layout{grid-template-columns:1fr}}
-.stage{position:relative;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#000;box-shadow:0 20px 50px rgba(0,0,0,.6)}
+.stage{position:relative;border-radius:16px;overflow:hidden;background:#000;box-shadow:0 20px 50px rgba(0,0,0,.6)}
+.scene{position:relative;width:100%;aspect-ratio:var(--r,16/9);margin:0 auto}
+.stage:fullscreen{display:flex;align-items:center;justify-content:center;border-radius:0}
+.stage:fullscreen .scene{width:min(100vw,calc(100vh * var(--rn,1.7778)))}
+.stage:-webkit-full-screen{display:flex;align-items:center;justify-content:center}
+.stage:-webkit-full-screen .scene{width:min(100vw,calc(100vh * var(--rn,1.7778)))}
 #art,#fx{position:absolute;inset:0}
 #art svg,#art img{width:100%;height:100%;display:block;object-fit:cover}
 #fx{pointer-events:none;z-index:2}
 #ytwrap{position:absolute;z-index:3;background:#000;transition:all .45s ease}
 #ytwrap iframe{width:100%;height:100%;display:block;border:0}
-.stage.big #ytwrap{left:0!important;top:0!important;width:100%!important;height:100%!important}
-.stage-tools{position:absolute;right:10px;bottom:10px;z-index:4}
+.stage-tools{position:absolute;right:10px;bottom:10px;z-index:4;display:flex;gap:6px;opacity:.85;transition:opacity .3s}
+.stage:fullscreen .stage-tools{opacity:0}.stage:fullscreen:hover .stage-tools{opacity:1}
+.stage-tools .fsonly{display:none}.stage:fullscreen .stage-tools .fsonly,.stage:-webkit-full-screen .stage-tools .fsonly{display:inline-block}
 .stage-tools .btn{background:rgba(20,14,10,.75);backdrop-filter:blur(6px);font-size:13px;padding:6px 10px}
 
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 90px);min-height:420px}
-.np small{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:1px}
+.np small{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:1px;display:flex;justify-content:space-between;align-items:center}
+.np small button{background:none;border:1px solid var(--line);border-radius:8px;color:var(--muted);font-size:11px;padding:3px 8px;text-transform:none;letter-spacing:0}
+.np small button:hover{color:var(--accent);border-color:var(--accent)}
+.layout.mini .panel{min-height:0;gap:10px}
+.layout.mini .panel .search,.layout.mini .panel #results,.layout.mini .panel .lh,.layout.mini .panel #queue{display:none!important}
+.layout.mini .np .tt{font-size:14px}
 .np .tt{font-weight:700;margin-top:4px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .ctrls{display:flex;gap:8px}
 .ctrls button{flex:1;background:#33241a;border:1px solid var(--line);border-radius:10px;padding:10px 0;font-size:16px}
@@ -132,13 +144,20 @@ dialog input{width:100%;background:#1a120d;border:1px solid var(--line);border-r
   </div>
   <div class="layout">
     <div class="stage" id="stage">
-      <div id="art"></div>
-      <div id="fx"></div>
-      <div id="ytwrap"><div id="yt"></div></div>
-      <div class="stage-tools"><button class="btn" onclick="toggleBig()" id="bigBtn">⤢ Big screen</button></div>
+      <div class="scene" id="scene">
+        <div id="art"></div>
+        <div id="fx"></div>
+        <div id="ytwrap"><div id="yt"></div></div>
+      </div>
+      <div class="stage-tools">
+        <button class="btn fsonly" onclick="prev()" title="Previous">⏮</button>
+        <button class="btn fsonly" onclick="togglePlay()" title="Play/Pause">⏯</button>
+        <button class="btn fsonly" onclick="next()" title="Next">⏭</button>
+        <button class="btn" onclick="toggleFS()" id="fsBtn">⛶ Fullscreen</button>
+      </div>
     </div>
     <aside class="panel">
-      <div class="np"><small>Now playing</small><div class="tt" id="npTitle">—</div></div>
+      <div class="np"><small><span>Now playing</span><button onclick="toggleMini()" id="miniBtn">▾ Minimize</button></small><div class="tt" id="npTitle">—</div></div>
       <div class="ctrls">
         <button onclick="prev()" title="Previous">⏮</button>
         <button onclick="togglePlay()" class="play" id="playBtn" title="Play/Pause">⏯</button>
@@ -399,14 +418,21 @@ function toast(m){const t=document.createElement('div');t.className='toast';t.te
 function openGenre(g){
   cur=g;document.documentElement.style.setProperty('--accent',g.accent);
   $('#gTitle').firstChild.textContent=g.emoji+' '+g.name;$('#gTag').textContent=g.tag;
-  $('#art').innerHTML=g.img?`<img src="${g.img}" alt="">`:g.svg;$('#stage').style.aspectRatio=g.ratio||'16/9';$('#fx').innerHTML='';g.fx&&g.fx($('#art svg'),$('#fx'));
+  $('#art').innerHTML=g.img?`<img src="${g.img}" alt="">`:g.svg;{const r=g.ratio||'16/9',[a,b]=r.split('/').map(Number);$('#scene').style.setProperty('--r',r);$('#scene').style.setProperty('--rn',a/b)}$('#fx').innerHTML='';g.fx&&g.fx($('#art svg'),$('#fx'));
   const [l,t,w,h]=g.screen;Object.assign($('#ytwrap').style,{left:l+'%',top:t+'%',width:w+'%',height:h+'%'});
-  $('#stage').classList.remove('big');$('#bigBtn').textContent='⤢ Big screen';
   $('#home').classList.add('hidden');$('#view').classList.remove('hidden');window.scrollTo(0,0);
   loadGenre(g);
 }
-function goHome(){ready&&player.pauseVideo();$('#view').classList.add('hidden');$('#home').classList.remove('hidden');document.documentElement.style.setProperty('--accent','#f0a24a')}
-function toggleBig(){const s=$('#stage');s.classList.toggle('big');$('#bigBtn').textContent=s.classList.contains('big')?'⤡ Back to scene':'⤢ Big screen'}
+function goHome(){goHomeFS();ready&&player.pauseVideo();$('#view').classList.add('hidden');$('#home').classList.remove('hidden');document.documentElement.style.setProperty('--accent','#f0a24a')}
+function goHomeFS(){if(document.fullscreenElement)document.exitFullscreen()}
+function toggleFS(){const s=$('#stage');
+  if(document.fullscreenElement||document.webkitFullscreenElement){(document.exitFullscreen||document.webkitExitFullscreen).call(document)}
+  else{(s.requestFullscreen||s.webkitRequestFullscreen).call(s)}}
+['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>{
+  $('#fsBtn').textContent=(document.fullscreenElement||document.webkitFullscreenElement)?'✕ Exit fullscreen':'⛶ Fullscreen'}));
+function setMini(on){$('.layout').classList.toggle('mini',on);$('#miniBtn').textContent=on?'▴ Expand':'▾ Minimize';store.set('pp_mini',on)}
+function toggleMini(){setMini(!$('.layout').classList.contains('mini'))}
+setMini(!!store.get('pp_mini'));
 
 /* ---------------- YOUTUBE ---------------- */
 async function ytSearch(q,max){
@@ -462,7 +488,7 @@ window.onYouTubeIframeAPIReady=()=>{
       onError:()=>{toast("This one can't play here, skipping ⏭");setTimeout(next,900)}}});
 };
 document.addEventListener('keydown',e=>{if($('#view').classList.contains('hidden')||e.target.tagName==='INPUT')return;
-  if(e.code==='Space'){e.preventDefault();togglePlay()}if(e.key==='ArrowRight')next();if(e.key==='ArrowLeft')prev()});
+  if(e.code==='Space'){e.preventDefault();togglePlay()}if(e.key==='ArrowRight')next();if(e.key==='ArrowLeft')prev();if(e.key==='f')toggleFS()});
 </script>
 <script src="https://www.youtube.com/iframe_api"></script>
 </body>
