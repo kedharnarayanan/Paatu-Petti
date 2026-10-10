@@ -47,7 +47,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 @media(max-width:960px){.layout{grid-template-columns:1fr}}
 .stage{position:relative;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#000;box-shadow:0 20px 50px rgba(0,0,0,.6)}
 #art,#fx{position:absolute;inset:0}
-#art svg{width:100%;height:100%;display:block}
+#art svg,#art img{width:100%;height:100%;display:block;object-fit:cover}
 #fx{pointer-events:none;z-index:2}
 #ytwrap{position:absolute;z-index:3;background:#000;transition:all .45s ease}
 #ytwrap iframe{width:100%;height:100%;display:block;border:0}
@@ -316,6 +316,7 @@ function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const
 function stars(svg,n,maxY){const g=svg.querySelector('#stars');if(!g)return;for(let i=0;i<n;i++){const s=el('circle',{cx:Math.random()*1600,cy:Math.random()*maxY,r:Math.random()*1.8+.4,fill:'#fff'},g);if(Math.random()<.4){s.classList.add('twinkle');s.style.animationDelay=(-Math.random()*3)+'s'}}}
 
 function fxRain(svg,fx){ rainIn(fx,[5.6,15.5,21.3,42.3],45); rainIn(fx,[73.1,15.5,21.3,42.3],45); rainIn(fx,[0,0,100,100],40,.18); }
+function fxRainImg(svg,fx){ rainIn(fx,[1,0,33,43],70,.55); rainIn(fx,[0,0,100,100],25,.08); }
 function fxNight(svg){
   stars(svg,70,300);
   const g=svg.querySelector('#city'); let x=700;
@@ -359,7 +360,7 @@ function fxDance(svg){
    query  = what gets searched on YouTube for this CD (edit freely!). */
 const GENRES=[
  {id:'rain',name:'Rain Aesthetics',tag:'Mazhai, jannal, nostalgia',emoji:'🌧️',cover:'linear-gradient(160deg,#5b7f8f,#1d3442)',accent:'#9cc7e0',
-  query:'tamil rain melody songs ilaiyaraaja arr rahman',screen:[39.06,29.11,21.88,21.78],svg:SVG_RAIN,fx:fxRain},
+  query:'tamil rain melody songs ilaiyaraaja arr rahman',screen:[68.0,18.5,20.7,25.3],img:'scenes/rain.jpg',ratio:'1408/768',svg:SVG_RAIN,fx:fxRainImg},
  {id:'night',name:'Into the Night',tag:'City lights, low lamps',emoji:'🌃',cover:'linear-gradient(160deg,#3a2a6b,#0b0d24)',accent:'#a99bff',
   query:'late night chill songs hindi tamil english lofi',screen:[11.56,36.11,20.63,21.11],svg:SVG_NIGHT,fx:fxNight},
  {id:'kaapi',name:'Morning Kaapi Ragas',tag:'Filter coffee & kolam',emoji:'☕',cover:'linear-gradient(160deg,#e9b75a,#8a4a1c)',accent:'#f4c542',
@@ -398,7 +399,7 @@ function toast(m){const t=document.createElement('div');t.className='toast';t.te
 function openGenre(g){
   cur=g;document.documentElement.style.setProperty('--accent',g.accent);
   $('#gTitle').firstChild.textContent=g.emoji+' '+g.name;$('#gTag').textContent=g.tag;
-  $('#art').innerHTML=g.svg;$('#fx').innerHTML='';g.fx&&g.fx($('#art svg'),$('#fx'));
+  $('#art').innerHTML=g.img?`<img src="${g.img}" alt="">`:g.svg;$('#stage').style.aspectRatio=g.ratio||'16/9';$('#fx').innerHTML='';g.fx&&g.fx($('#art svg'),$('#fx'));
   const [l,t,w,h]=g.screen;Object.assign($('#ytwrap').style,{left:l+'%',top:t+'%',width:w+'%',height:h+'%'});
   $('#stage').classList.remove('big');$('#bigBtn').textContent='⤢ Big screen';
   $('#home').classList.add('hidden');$('#view').classList.remove('hidden');window.scrollTo(0,0);
