@@ -21,7 +21,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .shelf{max-width:1040px;margin:0 auto}
 .row{display:flex;gap:28px;justify-content:center;flex-wrap:wrap;padding:60px 12px 0}
 .plank{height:22px;background:linear-gradient(#9a6539,#5e3a1f);border-radius:4px;box-shadow:0 14px 24px rgba(0,0,0,.55),inset 0 2px 0 rgba(255,255,255,.12);margin-bottom:10px}
-.cd{width:210px;aspect-ratio:1;border:0;padding:0;background:none;position:relative;transition:transform .35s,opacity .4s}
+.cd{width:190px;aspect-ratio:1;border:0;padding:0;background:none;position:relative;transition:transform .35s,opacity .4s}
 .cd .disc{position:absolute;inset:7%;border-radius:50%;background:radial-gradient(circle,#ddd 0 7%,#222 7.5% 9%,transparent 9.5%),conic-gradient(from 30deg,#e8e8f0,#b5d3f5,#f5c6e8,#f8f1b8,#c8f5d3,#e8e8f0);box-shadow:0 0 0 1px rgba(0,0,0,.2);transition:transform .5s cubic-bezier(.3,1.4,.5,1);z-index:0}
 .cd .case{position:absolute;inset:0;border-radius:6px;background:var(--cover);box-shadow:0 10px 22px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.15);overflow:hidden;z-index:1;display:flex;flex-direction:column;justify-content:flex-end;padding:18px 18px 18px 30px;text-align:left}
 .cd .case::before{content:"";position:absolute;left:0;top:0;bottom:0;width:14px;background:rgba(0,0,0,.35);box-shadow:inset -1px 0 0 rgba(255,255,255,.15)}
@@ -34,7 +34,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .cd:focus-visible{outline:3px solid var(--accent);outline-offset:6px}
 .cd.eject .disc{transform:translateY(-140%) rotate(540deg)}
 .shelf.picking .cd:not(.eject){opacity:.25}
-.keylink{margin-top:36px;background:none;border:1px solid var(--line);border-radius:99px;padding:8px 16px;color:var(--muted)}
+.homebtns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:36px}
+.keylink{background:none;border:1px solid var(--line);border-radius:99px;padding:8px 16px;color:var(--muted)}
 
 /* ---------- SCENE VIEW ---------- */
 #view{padding:12px 16px 24px}
@@ -53,6 +54,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .stage:-webkit-full-screen{display:flex;align-items:center;justify-content:center}
 .stage:-webkit-full-screen .scene{width:min(100vw,calc(100vh * var(--rn,1.7778)))}
 #art,#fx{position:absolute;inset:0}
+#art .layer{position:absolute;inset:0;opacity:0;transition:opacity .7s}#art .layer.in{opacity:1}
 #art svg,#art img{width:100%;height:100%;display:block;object-fit:cover}
 #fx{pointer-events:none;z-index:2}
 #ytwrap{position:absolute;z-index:3;background:#000;transition:all .45s ease}
@@ -98,6 +100,10 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 dialog h3{font-family:'Fraunces',serif;margin:0 0 8px}
 dialog p{color:var(--muted);font-size:14px;line-height:1.5}
 dialog a{color:var(--accent)}
+dialog textarea{width:100%;background:#1a120d;border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--ink);font:12px/1.4 monospace;margin:4px 0 12px;resize:vertical}
+.bar{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:center;font-size:14px;margin:6px 0}
+.bar span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bar i{display:block;height:8px;border-radius:9px;background:var(--accent)}
+.pick{margin-right:4px}
 dialog input{width:100%;background:#1a120d;border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--ink);font:inherit;margin:8px 0 14px}
 
 /* ---------- SCENE ANIMATIONS ---------- */
@@ -133,7 +139,7 @@ dialog input{width:100%;background:#1a120d;border:1px solid var(--line);border-r
   <h1>Paatu <span>Petti</span></h1>
   <p class="sub">Pick a CD. Pick a mood. Press play.</p>
   <div class="shelf" id="shelf"></div>
-  <button class="keylink" onclick="openKey()">⚙ YouTube API key</button>
+  <div class="homebtns"><button class="keylink" onclick="openTaste()">🧠 Your taste</button><button class="keylink" onclick="openKey()">⚙ YouTube API key</button></div>
 </section>
 
 <!-- SCENE -->
@@ -153,6 +159,7 @@ dialog input{width:100%;background:#1a120d;border:1px solid var(--line);border-r
         <button class="btn fsonly" onclick="prev()" title="Previous">⏮</button>
         <button class="btn fsonly" onclick="togglePlay()" title="Play/Pause">⏯</button>
         <button class="btn fsonly" onclick="next()" title="Next">⏭</button>
+        <button class="btn" onclick="nextScene()" title="Change scene">🎬 Scene</button>
         <button class="btn" onclick="toggleFS()" id="fsBtn">⛶ Fullscreen</button>
       </div>
     </div>
@@ -175,6 +182,19 @@ dialog input{width:100%;background:#1a120d;border:1px solid var(--line);border-r
   </div>
 </section>
 
+<dialog id="tasteDlg">
+  <h3>🧠 Your taste</h3>
+  <p id="tasteStats"></p>
+  <div id="tasteBody"></div>
+  <p style="margin-top:16px">Using another device? Copy the sync code here and paste it there to merge what each one has learned.</p>
+  <textarea id="syncIn" rows="2" placeholder="Paste a sync code here"></textarea>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+    <button class="btn" onclick="resetTaste()" title="Type reset in the box, then click">Reset</button>
+    <button class="btn" onclick="pasteSync()">Paste code</button>
+    <button class="btn" onclick="copySync()">Copy code</button>
+    <button class="btn" style="background:var(--accent);color:#1a120d" onclick="tasteDlg.close()">Done</button>
+  </div>
+</dialog>
 <dialog id="keyDlg">
   <h3>YouTube API key</h3>
   <p>Paste your free YouTube Data API v3 key. It's stored only in this browser. Get one at <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener">Google Cloud Console</a>; steps are in the README.</p>
@@ -375,37 +395,155 @@ function fxDance(svg){
 }
 
 /* ---------------- GENRES ----------------
-   screen = [left%, top%, width%, height%] of the TV/monitor inside the scene.
-   query  = what gets searched on YouTube for this CD (edit freely!). */
+   scenes = list of scene variants for the CD. The site rotates through them.
+     img    = image file in /scenes   (or svg: for drawn scenes)
+     screen = [left%, top%, width%, height%] of the TV/monitor. Leave it out and
+              the site auto-detects the big black screen in the image.
+   If an image file is missing it is skipped, so you can drop new scenes into
+   /scenes with these names any time.
+   query = base YouTube search for the CD. mood = short words used when the
+   site personalises the search with your favourite artists. */
 const GENRES=[
  {id:'rain',name:'Rain Aesthetics',tag:'Mazhai, jannal, nostalgia',emoji:'🌧️',cover:'linear-gradient(160deg,#5b7f8f,#1d3442)',accent:'#9cc7e0',
-  query:'tamil rain melody songs ilaiyaraaja arr rahman',screen:[68.0,18.5,20.7,25.3],img:'scenes/rain.jpg',ratio:'1408/768',svg:SVG_RAIN,fx:fxRainImg},
+  query:'tamil rain melody songs ilaiyaraaja arr rahman',mood:'rain melody songs',
+  scenes:[{img:'scenes/rain.jpg',screen:[68.0,18.5,20.7,25.3],fx:fxRainImg},{img:'scenes/rain-couple.jpg',fx:fxDrizzle},{img:'scenes/rain-courtyard.jpg',fx:fxDrizzle}]},
  {id:'night',name:'Into the Night',tag:'City lights, low lamps',emoji:'🌃',cover:'linear-gradient(160deg,#3a2a6b,#0b0d24)',accent:'#a99bff',
-  query:'late night chill songs hindi tamil english lofi',screen:[17.4,43.0,18.7,21.0],img:'scenes/night.jpg',ratio:'1680/944',svg:SVG_NIGHT,fx:null},
+  query:'late night chill songs hindi tamil english lofi',mood:'late night songs',
+  scenes:[{img:'scenes/night.jpg',screen:[17.4,43.0,18.7,21.0]},{img:'scenes/night-hostel.jpg'}]},
  {id:'kaapi',name:'Morning Kaapi Ragas',tag:'Filter coffee & kolam',emoji:'☕',cover:'linear-gradient(160deg,#e9b75a,#8a4a1c)',accent:'#f4c542',
-  query:'morning carnatic raga tamil film songs',screen:[31.7,9.1,27.8,28.5],img:'scenes/kaapi.jpg',ratio:'1680/944',svg:SVG_KAAPI,fx:null},
+  query:'morning carnatic raga tamil film songs',mood:'morning melody songs',
+  scenes:[{img:'scenes/kaapi.jpg',screen:[31.7,9.1,27.8,28.5]},{img:'scenes/kaapi-family.jpg'}]},
  {id:'party',name:'Party Bangers',tag:'Terrace, fairy lights, volume up',emoji:'🎉',cover:'linear-gradient(160deg,#ff5fa2,#4a0f5a)',accent:'#ff6bb5',
-  query:'party songs hits tamil hindi english',screen:[32.0,15.0,35.4,36.5],img:'scenes/party.jpg',ratio:'1680/944',svg:SVG_PARTY,fx:null},
+  query:'party songs hits tamil hindi english',mood:'party songs',
+  scenes:[{img:'scenes/party.jpg',screen:[32.0,15.0,35.4,36.5]},{img:'scenes/party-2.jpg'}]},
  {id:'dance',name:'Danceaholics',tag:'Mirror ball mandatory',emoji:'🪩',cover:'linear-gradient(160deg,#3dfbff,#7d3dff)',accent:'#3dfbff',
-  query:'dance hits kuthu songs dj',screen:[34.2,16.4,31.5,30.2],img:'scenes/dance.jpg',ratio:'1680/944',svg:SVG_DANCE,fx:null},
+  query:'dance hits kuthu songs dj',mood:'dance kuthu songs',
+  scenes:[{img:'scenes/dance.jpg',screen:[34.2,16.4,31.5,30.2]},{img:'scenes/dance-2.jpg'}]},
  {id:'main',name:'Main Character Energy',tag:'Golden hour, windows down',emoji:'🌅',cover:'linear-gradient(160deg,#ffb36b,#c2416b)',accent:'#ffb36b',
-  query:'main character energy songs feel good',screen:[38.44,66.11,23.13,21.67],svg:SVG_MAIN,fx:null},
+  query:'main character energy songs feel good',mood:'feel good songs',
+  scenes:[{svg:SVG_MAIN,screen:[38.44,66.11,23.13,21.67]},{img:'scenes/main.jpg'}]},
+ {id:'foryou',name:'For You',tag:'Learns what you love',emoji:'✨',cover:'linear-gradient(160deg,#f0a24a,#6b2a7a)',accent:'#f0a24a',
+  query:'',mood:'songs',scenes:null /* uses every scene from every CD */},
 ];
+function fxDrizzle(svg,fx){ rainIn(fx,[0,0,100,100],45,.14) }
 
 /* ---------------- STATE ---------------- */
-let cur=null, queue=[], idx=0, player=null, ready=false, pending=null;
+let cur=null, queue=[], idx=0, player=null, ready=false, pending=null, sceneTimer=0, playing=null;
 const $=s=>document.querySelector(s);
 const keyDlg=$('#keyDlg');
 const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch{return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
 const getKey=()=>YT_API_KEY||store.get('pp_key')||'';
 const dec=s=>{const t=document.createElement('textarea');t.innerHTML=s;return t.value};
-const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2600)}
+
+/* =========================================================
+   TASTE ENGINE — learns from implicit feedback, all in-browser.
+   Signals: finished (+3), played past half (+1.5), skipped early (-2),
+   skipped mid-way (-0.5), searched (+1 to artists in the query),
+   added from search (+1.5), played from search (+2).
+   Scores live per artist/channel/language (global + per CD) and per track,
+   and fade ~1.5% a day so recent taste matters most.
+   Stored as one JSON object (pp_taste) so it can sync to a backend later.
+   ========================================================= */
+const ART=[['A.R. Rahman','a r rahman','ar rahman','rahman'],['Ilaiyaraaja','ilaiyaraaja','ilayaraja','raja'],['Anirudh','anirudh'],['Yuvan','yuvan'],
+ ['Harris Jayaraj','harris jayaraj'],['G.V. Prakash','g v prakash','gv prakash'],['Santhosh Narayanan','santhosh narayanan'],['D. Imman','d imman','imman'],
+ ['Vidyasagar','vidyasagar'],['Deva','deva'],['Sid Sriram','sid sriram'],['SPB','spb','s p balasubrahmanyam','balasubrahmanyam','s p b'],['K.S. Chithra','chithra'],
+ ['S. Janaki','janaki'],['Hariharan','hariharan'],['Shreya Ghoshal','shreya ghoshal'],['Arijit Singh','arijit'],['Pritam','pritam'],['Shankar Mahadevan','shankar mahadevan'],
+ ['Dhee','dhee'],['Karthik','karthik'],['Haricharan','haricharan'],['Vijay Antony','vijay antony'],['Hiphop Tamizha','hiphop tamizha'],['Sean Roldan','sean roldan'],
+ ['Govind Vasantha','govind vasantha'],['Justin Prabhakaran','justin prabhakaran'],['Pradeep Kumar','pradeep kumar'],['Devi Sri Prasad','devi sri prasad','dsp'],
+ ['Thaman','thaman'],['Keeravani','keeravani'],['Sushin Shyam','sushin shyam'],['Hesham','hesham'],['Jakes Bejoy','jakes bejoy'],['Amit Trivedi','amit trivedi'],
+ ['Vishal-Shekhar','vishal shekhar','vishal-shekhar'],['Badshah','badshah'],['Diljit','diljit'],['AP Dhillon','ap dhillon'],['Karan Aujla','karan aujla'],
+ ['The Weeknd','weeknd'],['Dua Lipa','dua lipa'],['Taylor Swift','taylor swift'],['Ed Sheeran','ed sheeran'],['Coldplay','coldplay'],['Bruno Mars','bruno mars']];
+const LANGS=['tamil','hindi','telugu','malayalam','kannada','english','punjabi'];
+const norm=s=>' '+String(s).toLowerCase().replace(/[^a-z0-9஀-௿]+/g,' ').trim()+' ';
+function entities(text,ch){
+  const n=norm(text+' '+(ch||'')),out=new Set();
+  for(const [name,...al] of ART) if(al.some(a=>n.includes(' '+a+' ')))out.add('a:'+name);
+  for(const l of LANGS) if(n.includes(' '+l+' '))out.add('l:'+l);
+  if(ch){const c=ch.replace(/\s*-\s*Topic$/i,'').replace(/VEVO|Official/gi,'').trim(); if(c)out.add('c:'+c)}
+  return [...out];
+}
+const T=(()=>{const t=store.get('pp_taste')||{v:1,ent:{},tr:{},q:[],day:Date.now()};
+  const days=Math.floor((Date.now()-t.day)/864e5);
+  if(days>0){const f=Math.pow(.985,days);for(const o of [...Object.values(t.ent),...Object.values(t.tr)]){o.s*=f;for(const k in o.g)o.g[k]*=f}t.day=Date.now()}
+  return t})();
+function saveT(){const ids=Object.keys(T.tr);if(ids.length>400){ids.sort((a,b)=>T.tr[a].at-T.tr[b].at).slice(0,ids.length-400).forEach(i=>delete T.tr[i])}
+  T.q=T.q.slice(-60);store.set('pp_taste',T)}
+function bumpEnt(e,gid,w){const E=T.ent[e]||(T.ent[e]={s:0,g:{}});E.s+=w;E.g[gid]=(E.g[gid]||0)+w}
+function learn(track,gid,w,kind){
+  const t=T.tr[track.id]||(T.tr[track.id]={t:track.title,ch:track.ch,th:track.thumb,s:0,g:{},n:0,k:0,f:0});
+  t.s+=w;t.g[gid]=(t.g[gid]||0)+w;t.at=Date.now();
+  if(kind==='play')t.n++;if(kind==='skip')t.k++;if(kind==='finish')t.f++;
+  for(const e of entities(track.title,track.ch))bumpEnt(e,gid,w*(e[0]==='c'?.5:e[0]==='l'?.3:1));
+  saveT();
+}
+function learnSearch(q,gid){T.q.push({q,g:gid,at:Date.now()});for(const e of entities(q))bumpEnt(e,gid,1);saveT()}
+function topEnts(gid,n,prefix='a:'){return Object.entries(T.ent).filter(([k])=>k.startsWith(prefix))
+  .map(([k,E])=>[k.slice(2),gid?(E.g[gid]||0)+E.s*.3:E.s]).filter(([,s])=>s>=(gid?3:2)).sort((a,b)=>b[1]-a[1]).slice(0,n)}
+function scoreTrack(s,gid){
+  let sc=0;const t=T.tr[s.id];
+  if(t){sc+=(gid?(t.g[gid]||0):0)+t.s*.4; if(t.k>=2&&!t.f)sc-=15}
+  for(const e of entities(s.title,s.ch)){const E=T.ent[e];if(E)sc+=(gid?(E.g[gid]||0)*.6:0)+E.s*.25}
+  return sc;
+}
+const bannedTrack=id=>{const t=T.tr[id];return t&&t.k>=3&&!t.f};
+/* called whenever a track stops being the current one */
+function closeTrack(ended){
+  if(!playing||!ready)return;const p=playing;playing=null;
+  let pos=0,dur=0;try{pos=player.getCurrentTime()||0;dur=player.getDuration()||0}catch{}
+  const r=ended?1:dur?pos/dur:0;
+  if(ended||r>=.9)learn(p.s,p.g,3,'finish');
+  else if(r>=.5)learn(p.s,p.g,1.5,'play');
+  else if(pos<30&&r<.25)learn(p.s,p.g,-2,'skip');
+  else learn(p.s,p.g,-.5,'skip');
+}
+
+/* ---------------- SCENES ---------------- */
+const allScenes=()=>GENRES.filter(g=>g.scenes).flatMap(g=>g.scenes);
+const scenesOf=g=>(g.scenes||allScenes()).filter(v=>!v.bad);
+function detectScreen(img){
+  const W=200,H=Math.max(1,Math.round(W*img.naturalHeight/img.naturalWidth));
+  const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');x.drawImage(img,0,0,W,H);
+  let d;try{d=x.getImageData(0,0,W,H).data}catch{return [35,20,30,30]}
+  const m=new Uint8Array(W*H),lab=new Int32Array(W*H);
+  for(let i=0;i<W*H;i++){const r=d[i*4],g=d[i*4+1],b=d[i*4+2];m[i]=(r+g+b<75&&Math.max(r,g,b)-Math.min(r,g,b)<28)?1:0}
+  let best=null,id=0;
+  for(let s0=0;s0<W*H;s0++){if(!m[s0]||lab[s0])continue;id++;lab[s0]=id;const st=[s0];let n=0,x0=W,y0=H,x1=0,y1=0;
+    while(st.length){const p=st.pop();n++;const px=p%W,py=(p/W)|0;if(px<x0)x0=px;if(px>x1)x1=px;if(py<y0)y0=py;if(py>y1)y1=py;
+      if(px>0&&m[p-1]&&!lab[p-1]){lab[p-1]=id;st.push(p-1)} if(px<W-1&&m[p+1]&&!lab[p+1]){lab[p+1]=id;st.push(p+1)}
+      if(py>0&&m[p-W]&&!lab[p-W]){lab[p-W]=id;st.push(p-W)} if(py<H-1&&m[p+W]&&!lab[p+W]){lab[p+W]=id;st.push(p+W)}}
+    const area=(x1-x0+1)*(y1-y0+1),fill=n/area,asp=(x1-x0+1)/(y1-y0+1);
+    if(fill>.72&&area>W*H*.02&&asp>1&&asp<3.2&&(!best||area>best.area))best={area,x0,y0,x1,y1}}
+  if(!best)return [35,20,30,30];
+  return [(best.x0+1)/W*100,(best.y0+1)/H*100,(best.x1-best.x0-1)/W*100,(best.y1-best.y0-1)/H*100].map(v=>+v.toFixed(2));
+}
+function applyScene(v,html,ratio,screen){
+  const art=$('#art'),old=art.firstElementChild,el=document.createElement('div');
+  el.className='layer';el.innerHTML=html;art.appendChild(el);requestAnimationFrame(()=>el.classList.add('in'));
+  if(old)setTimeout(()=>old.remove(),700);
+  const [a,b]=ratio;$('#scene').style.setProperty('--r',a+'/'+b);$('#scene').style.setProperty('--rn',a/b);
+  $('#fx').innerHTML='';v.fx&&v.fx(el.querySelector('svg'),$('#fx'));
+  const [l,t,w,h]=screen;Object.assign($('#ytwrap').style,{left:l+'%',top:t+'%',width:w+'%',height:h+'%'});
+}
+function showScene(g,step=0){
+  const list=scenesOf(g);if(!list.length)return;
+  const k='pp_scene_'+g.id;let i=((store.get(k)??-1)+step+list.length)%list.length;store.set(k,i);
+  const v=list[i];
+  if(v.svg){applyScene(v,v.svg,[16,9],v.screen);return}
+  const img=new Image();
+  img.onload=()=>{if(cur!==g)return;
+    const sc=v.screen||store.get('pp_scr_'+v.img)||detectScreen(img);if(!v.screen)store.set('pp_scr_'+v.img,sc);
+    applyScene(v,`<img src="${v.img}" alt="">`,[img.naturalWidth,img.naturalHeight],sc)};
+  img.onerror=()=>{v.bad=true;if(scenesOf(g).length)showScene(g,0)};
+  img.src=v.img;
+}
+function nextScene(){if(cur){showScene(cur,1);sceneTimer=0}}
 
 /* ---------------- SHELF ---------------- */
 (function buildShelf(){
   const shelf=$('#shelf');
-  [GENRES.slice(0,3),GENRES.slice(3)].forEach(row=>{
+  [GENRES.slice(0,4),GENRES.slice(4)].forEach(row=>{
     const r=document.createElement('div');r.className='row';
     row.forEach(g=>{const b=document.createElement('button');b.className='cd';b.style.setProperty('--cover',g.cover);
       b.innerHTML=`<div class="disc"></div><div class="case"><span class="emo">${g.emoji}</span><div class="t">${g.name}</div><div class="tg">${g.tag}</div></div>`;
@@ -416,14 +554,13 @@ function toast(m){const t=document.createElement('div');t.className='toast';t.te
 
 /* ---------------- VIEW ---------------- */
 function openGenre(g){
-  cur=g;document.documentElement.style.setProperty('--accent',g.accent);
+  cur=g;sceneTimer=0;document.documentElement.style.setProperty('--accent',g.accent);
   $('#gTitle').firstChild.textContent=g.emoji+' '+g.name;$('#gTag').textContent=g.tag;
-  $('#art').innerHTML=g.img?`<img src="${g.img}" alt="">`:g.svg;{const r=g.ratio||'16/9',[a,b]=r.split('/').map(Number);$('#scene').style.setProperty('--r',r);$('#scene').style.setProperty('--rn',a/b)}$('#fx').innerHTML='';g.fx&&g.fx($('#art svg'),$('#fx'));
-  const [l,t,w,h]=g.screen;Object.assign($('#ytwrap').style,{left:l+'%',top:t+'%',width:w+'%',height:h+'%'});
+  $('#art').innerHTML='';showScene(g,1);
   $('#home').classList.add('hidden');$('#view').classList.remove('hidden');window.scrollTo(0,0);
   loadGenre(g);
 }
-function goHome(){goHomeFS();ready&&player.pauseVideo();$('#view').classList.add('hidden');$('#home').classList.remove('hidden');document.documentElement.style.setProperty('--accent','#f0a24a')}
+function goHome(){closeTrack(false);goHomeFS();ready&&player.pauseVideo();$('#view').classList.add('hidden');$('#home').classList.remove('hidden');document.documentElement.style.setProperty('--accent','#f0a24a')}
 function goHomeFS(){if(document.fullscreenElement)document.exitFullscreen()}
 function toggleFS(){const s=$('#stage');
   if(document.fullscreenElement||document.webkitFullscreenElement){(document.exitFullscreen||document.webkitExitFullscreen).call(document)}
@@ -443,28 +580,60 @@ async function ytSearch(q,max){
   if(j.error){const r=j.error.errors?.[0]?.reason||'';throw new Error(r.includes('quota')?'Daily YouTube quota used up. It resets around 12:30 PM IST.':j.error.message)}
   return j.items.map(it=>({id:it.id.videoId,title:dec(it.snippet.title),ch:dec(it.snippet.channelTitle),thumb:it.snippet.thumbnails?.medium?.url||it.snippet.thumbnails?.default?.url}));
 }
+/* cached search: same query within 24h costs no quota */
+async function cachedSearch(q,max,force){
+  const ck='pp_c_'+q.toLowerCase(),c=store.get(ck);
+  if(!force&&c&&Date.now()-c.t<864e5)return c.items;
+  const items=await ytSearch(q,max);store.set(ck,{t:Date.now(),items});return items;
+}
 const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 
 async function loadGenre(g,force){
   const qEl=$('#queue');qEl.innerHTML='<div class="msg">Spinning up the CD…</div>';
-  const ck='pp_cache_'+g.id, c=store.get(ck);
-  let items;
-  if(!force&&c&&Date.now()-c.t<864e5&&c.q===g.query) items=c.items.slice();
-  else try{items=await ytSearch(g.query,40);store.set(ck,{t:Date.now(),q:g.query,items})}
-  catch(e){ if(e.message==='NOKEY'){qEl.innerHTML='<div class="msg">Add your YouTube API key to start playing.</div>';openKey();}else qEl.innerHTML=`<div class="msg">⚠ ${esc(e.message)}</div>`;return }
+  const gid=g.id==='foryou'?null:g.id, fav=topEnts(gid,2).map(([n])=>n);
+  let base=[],mine=[];
+  try{
+    if(g.id==='foryou'){
+      if(!fav.length){qEl.innerHTML='<div class="msg">Nothing learned yet. Play a few CDs and come back. Your taste builds as you listen, skip and search.</div>';return}
+      base=await cachedSearch(fav.join(' ')+' hit songs',30,force);
+      const f3=topEnts(null,4).map(([n])=>n)[2]; if(f3)mine=await cachedSearch(f3+' best songs',15,force);
+    }else{
+      base=await cachedSearch(g.query,40,force);
+      if(fav.length)mine=await cachedSearch(fav.join(' ')+' '+g.mood,15,force);
+    }
+  }catch(e){ if(e.message==='NOKEY'){qEl.innerHTML='<div class="msg">Add your YouTube API key to start playing.</div>';openKey();}else qEl.innerHTML=`<div class="msg">⚠ ${esc(e.message)}</div>`;return }
   if(cur!==g)return;
-  queue=shuf(items);idx=0;renderQueue();playIdx(0);
+  // songs you loved here before come back
+  const hist=Object.entries(T.tr).filter(([,t])=>(gid?(t.g[gid]||0):t.s)>=2.5).sort((a,b)=>(gid?b[1].g[gid]:b[1].s)-(gid?a[1].g[gid]:a[1].s)).slice(0,12)
+    .map(([id,t])=>({id,title:t.t,ch:t.ch,thumb:t.th,_p:1}));
+  const seen=new Set(),pool=[];
+  for(const s of [...hist,...mine.map(s=>({...s,_p:1})),...base]){if(seen.has(s.id)||bannedTrack(s.id))continue;seen.add(s.id);pool.push(s)}
+  const learned=Object.keys(T.tr).length>=3;
+  queue=learned?diversify(pool.map(s=>[s,scoreTrack(s,gid)+Math.random()*3])).slice(0,50):shuf(pool);
+  idx=0;renderQueue();playIdx(0);
+  if(fav.length||hist.length)toast('✨ Mix tuned to your taste');
+}
+/* greedy re-rank: each repeat of the same artist/channel costs a little,
+   so favourites lead but the mix keeps variety and room to discover */
+function diversify(scored){
+  const out=[],seen={},left=scored.slice();
+  while(left.length){let bi=0,bv=-1e9;
+    left.forEach(([s,v],i)=>{const pen=entities(s.title,s.ch).reduce((a,e)=>a+(seen[e]||0)*(e[0]==='l'?.3:2.2),0);if(v-pen>bv){bv=v-pen;bi=i}});
+    const [s]=left.splice(bi,1)[0];out.push(s);entities(s.title,s.ch).forEach(e=>seen[e]=(seen[e]||0)+1)}
+  return out;
 }
 function renderQueue(){
   const q=$('#queue');if(!queue.length){q.innerHTML='<div class="msg">Queue is empty.</div>';return}
-  q.innerHTML=queue.map((s,i)=>`<button class="song${i===idx?' on':''}" onclick="playIdx(${i})"><img src="${s.thumb}" alt="" loading="lazy"><div class="m"><div class="a">${esc(s.title)}</div><div class="c">${esc(s.ch)}</div></div></button>`).join('');
+  q.innerHTML=queue.map((s,i)=>`<button class="song${i===idx?' on':''}" onclick="playIdx(${i})"><img src="${s.thumb}" alt="" loading="lazy"><div class="m"><div class="a">${s._p?'<span class="pick" title="Picked for you">✨</span>':''}${esc(s.title)}</div><div class="c">${esc(s.ch)}</div></div></button>`).join('');
   q.querySelector('.on')?.scrollIntoView({block:'nearest'});
 }
-function playIdx(i){
-  if(!queue[i])return;idx=i;const s=queue[i];$('#npTitle').textContent=s.title;renderQueue();
+function playIdx(i,ended){
+  if(!queue[i])return;closeTrack(ended);idx=i;const s=queue[i];$('#npTitle').textContent=s.title;renderQueue();
+  playing={s,g:cur?.id||'foryou'};
   if(ready)player.loadVideoById(s.id);else pending=s.id;
+  if(++sceneTimer>=4&&cur){sceneTimer=0;showScene(cur,1)}   // fresh scene every 4 songs
 }
-const next=()=>queue.length&&playIdx((idx+1)%queue.length);
+const next=(ended)=>queue.length&&playIdx((idx+1)%queue.length,ended===true);
 const prev=()=>queue.length&&playIdx((idx-1+queue.length)%queue.length);
 function togglePlay(){if(!ready)return;player.getPlayerState()===1?player.pauseVideo():player.playVideo()}
 function shuffleQ(){if(!queue.length)return;const c=queue[idx];queue=[c,...shuf(queue.filter((_,i)=>i!==idx))];idx=0;renderQueue();toast('Shuffled 🔀')}
@@ -472,20 +641,40 @@ function shuffleQ(){if(!queue.length)return;const c=queue[idx];queue=[c,...shuf(
 async function doSearch(e){
   e.preventDefault();const q=$('#q').value.trim();if(!q)return;const r=$('#results');
   r.classList.remove('hidden');r.innerHTML='<div class="msg">Searching…</div>';
-  try{const items=await ytSearch(q,8);r._items=items;
+  learnSearch(q,cur?.id||'foryou');
+  try{const items=await cachedSearch(q,8);r._items=items;
     r.innerHTML=`<div class="lh"><span>Results</span><button onclick="$('#results').classList.add('hidden')">✕ close</button></div>`+items.map((s,i)=>`<div class="song"><img src="${s.thumb}" alt=""><div class="m"><div class="a">${esc(s.title)}</div><div class="c">${esc(s.ch)}</div></div><button class="add" onclick="addRes(${i},1)">▶</button><button class="add" onclick="addRes(${i},0)">＋</button></div>`).join('')}
   catch(err){r.innerHTML=`<div class="msg">⚠ ${err.message==='NOKEY'?'Add your API key first.':esc(err.message)}</div>`;if(err.message==='NOKEY')openKey()}
 }
-function addRes(i,playNow){const s=$('#results')._items[i];queue.splice(idx+1,0,s);if(playNow)playIdx(idx+1);else{renderQueue();toast('Added to up next')}}
+function addRes(i,playNow){const s=$('#results')._items[i];learn(s,cur?.id||'foryou',playNow?2:1.5,'add');queue.splice(idx+1,0,s);if(playNow)playIdx(idx+1);else{renderQueue();toast('Added to up next')}}
 
 function openKey(){$('#keyIn').value=store.get('pp_key')||'';keyDlg.showModal()}
 function saveKey(){const k=$('#keyIn').value.trim();store.set('pp_key',k);keyDlg.close();toast(k?'Key saved ✓':'Key cleared');if(k&&cur&&!$('#view').classList.contains('hidden'))loadGenre(cur)}
 
+/* ---------------- TASTE PANEL + SYNC CODE ---------------- */
+const tasteDlg=$('#tasteDlg');
+function openTaste(){
+  const top=topEnts(null,10).concat([]),max=top[0]?.[1]||1;
+  const plays=Object.values(T.tr).reduce((a,t)=>a+t.n+t.f,0),skips=Object.values(T.tr).reduce((a,t)=>a+t.k,0);
+  $('#tasteBody').innerHTML=top.length?top.map(([n,s])=>`<div class="bar"><span>${esc(n)}</span><i style="width:${Math.max(6,s/max*100)}%"></i></div>`).join('')
+    :'<p>Nothing yet. Listen to a few songs, skip what you don\'t like, search what you do.</p>';
+  $('#tasteStats').textContent=`${plays} listens · ${skips} skips · ${T.q.length} searches learned`;
+  $('#syncIn').value='';tasteDlg.showModal();
+}
+function copySync(){const code=btoa(unescape(encodeURIComponent(JSON.stringify(T))));
+  navigator.clipboard.writeText(code).then(()=>toast('Sync code copied. Paste it on your other device.'),()=>{$('#syncIn').value=code;$('#syncIn').select();toast('Copy the code from the box')})}
+function pasteSync(){try{const o=JSON.parse(decodeURIComponent(escape(atob($('#syncIn').value.trim()))));
+  for(const[k,E]of Object.entries(o.ent||{})){const M=T.ent[k]||(T.ent[k]={s:0,g:{}});M.s=Math.max(M.s,E.s);for(const g in E.g)M.g[g]=Math.max(M.g[g]||0,E.g[g])}
+  for(const[id,t]of Object.entries(o.tr||{})){const m=T.tr[id];if(!m||t.at>m.at)T.tr[id]=t}
+  T.q=[...T.q,...(o.q||[])].sort((a,b)=>a.at-b.at);saveT();openTaste();toast('Taste merged ✓')}catch{toast('That code didn\'t work')}}
+function resetTaste(){if($('#syncIn').value.trim().toLowerCase()!=='reset'){toast('Type reset in the box first');return}
+  T.ent={};T.tr={};T.q=[];saveT();openTaste();toast('Taste reset')}
+
 window.onYouTubeIframeAPIReady=()=>{
   player=new YT.Player('yt',{width:'100%',height:'100%',playerVars:{playsinline:1,rel:0,modestbranding:1},
     events:{onReady:()=>{ready=true;if(pending){player.loadVideoById(pending);pending=null}},
-      onStateChange:e=>{if(e.data===YT.PlayerState.ENDED)next()},
-      onError:()=>{toast("This one can't play here, skipping ⏭");setTimeout(next,900)}}});
+      onStateChange:e=>{if(e.data===YT.PlayerState.ENDED)next(true)},
+      onError:()=>{playing=null;toast("This one can't play here, skipping ⏭");setTimeout(next,900)}}});
 };
 document.addEventListener('keydown',e=>{if($('#view').classList.contains('hidden')||e.target.tagName==='INPUT')return;
   if(e.code==='Space'){e.preventDefault();togglePlay()}if(e.key==='ArrowRight')next();if(e.key==='ArrowLeft')prev();if(e.key==='f')toggleFS()});
